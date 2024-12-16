@@ -64,7 +64,7 @@ This project provides a comprehensive pipeline for topic modeling and analysis u
 
 ### Files
 - `Smishiviz_code.ipynb`: Handles text preprocessing tasks, Contains the main BERTopic modeling and visualization logic, Extracts and processes domain and TLD information from URL
-- Topic Hierarchy ![Topic Hierarchy](top_hierarchy.png)
+- Topic Hierarchy ![Topic Hierarchy](topic_hierarchy.png)
 
 
 ### How to Use
