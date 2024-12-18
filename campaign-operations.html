@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Cluster Tidy Tree with Zoom and Click</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .node circle {
+            fill: steelblue;
+            stroke: black;
+            stroke-width: 1.5px;
+        }
+        .node text {
+            font: 10px sans-serif;
+        }
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 12px;
+        }
+        .tree-container {
+            display: inline-block;
+            margin: 10px;
+        }
+        svg {
+            border: 1px solid black;
+        }
+        .root circle {
+    fill: orange;  /* Change the fill color of the root node */
+    stroke: red;
+    stroke-width: 2px;
+}
+.root-label {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    fill: red;  /* Change the color of the root label */
+}
+    </style>
+</head>
+<body>
+
+<!-- Tooltip div -->
+<div id="tooltip" class="tooltip" style="display: none;"></div>
+
+<!-- Containers for graphs -->
+<div id="tree-container"></div>
+
+<script>
+// Function to create a tree with zoom and tooltip functionality
+function createTidyTree(container, data) {
+    const width = 400;
+    const height = 400;
+    const margin = { top: 20, right: 90, bottom: 30, left: 90 };
+
+    // Set up zoom functionality
+    const zoom = d3.zoom()
+        .scaleExtent([0.5, 10])  // Zoom limits
+        .on("zoom", (event) => {
+            const scaleFactor = event.transform.k;
+
+            // Update the position of the nodes (transform them based on zoom level)
+            svgGroup.selectAll(".node")
+                .attr("transform", d => `translate(${event.transform.apply([d.y, d.x])})`);
+
+            // Update the position of the links (edges) to follow the nodes
+            svgGroup.selectAll(".link")
+                .attr("d", d3.linkHorizontal()
+                    .x(d => event.transform.applyX(d.y))
+                    .y(d => event.transform.applyY(d.x)));
+        });
+
+    // Create the svg canvas with zoom enabled
+    const svg = container.append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .call(zoom);
+
+    const svgGroup = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const treeLayout = d3.tree().size([height - margin.top - margin.bottom, width - margin.left - margin.right]);
+
+    const root = d3.hierarchy(data);
+
+    treeLayout(root);
+
+    // Create links (edges)
+    svgGroup.selectAll(".link")
+        .data(root.links())
+        .enter().append("path")
+        .attr("class", "link")
+        .attr("d", d3.linkHorizontal()
+            .x(d => d.y)
+            .y(d => d.x)
+        );
+
+    // Create nodes
+    const node = svgGroup.selectAll(".node")
+        .data(root.descendants())
+        .enter().append("g")
+        .attr("class", d => d.depth === 0 ? "node root" : "node")  // Add "root" class to root node
+        .attr("transform", d => `translate(${d.y},${d.x})`)
+        .on("click", (event, d) => showTooltip(event, d.data));
+
+    // Add circles for the nodes, with initial radius 5
+    node.append("circle")
+        .attr("r", 5);  // Set the initial radius
+
+    // Add labels
+    node.append("text")
+        .attr("dy", 3)
+        .attr("x", d => d.children ? -10 : 10)  // Initial spacing for labels
+        .attr("class", d => d.depth === 0 ? "root-label" : "")  // Apply root-label class to root node's label
+        .style("text-anchor", d => d.children ? "end" : "start")
+        .text(d => d.data.name);
+}
+
+
+
+
+
+
+
+    // Function to show tooltip with node information
+    function showTooltip(event, data) {
+        const tooltip = d3.select("#tooltip");
+        let content = `<strong>${data.name}</strong>`;
+        if (data.content) {
+            content += `<br>Content: ${data.content}`;
+        }
+        tooltip.style("display", "block")
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 20) + "px")
+            .html(content);
+    }
+
+    // Load the JSON file containing the hierarchical data
+    d3.json("graph.json").then(function(data) {
+        const container = d3.select("#tree-container");
+
+        // Loop through each domain in the data and create a separate tree for each
+        data.forEach(domainData => {
+            const treeDiv = container.append("div")
+                .attr("class", "tree-container");
+
+            createTidyTree(treeDiv, domainData);
+        });
+    });
+
+    // Hide tooltip when clicking outside the nodes
+    d3.select("body").on("click", function(event) {
+        if (!event.target.closest(".node")) {
+            d3.select("#tooltip").style("display", "none");
+        }
+    });
+</script>
+
+</body>
+</html>

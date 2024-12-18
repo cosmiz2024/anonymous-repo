@@ -64,6 +64,9 @@ This project provides a comprehensive pipeline for topic modeling and analysis u
 
 ### Files
 - `Smishiviz_code.ipynb`: Handles text preprocessing tasks, Contains the main BERTopic modeling and visualization logic, Extracts and processes domain and TLD information from URL
+- `graph_generator.ipynb`: Generate JSON code to feed D3js graph visualization tool
+- `graph.json`: Example of generated json file
+- `campaign-operations.html`:Example of Visualization of graph with D3js
 
 
 ### How to Use
